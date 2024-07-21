@@ -1,0 +1,8 @@
+:{$PORT}
+
+root * /srv
+
+# Do not rewrite up to this point!
+
+file_server
+templates
