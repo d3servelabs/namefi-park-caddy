@@ -1,8 +1,32 @@
-:{$PORT}
+# on_demand_tls asks the server to provide a certificate for a domain
+# hence it's important to provide this directive in the server block
+{
+  on_demand_tls {
+    # this asks itself which always respond "ok"
+    ask http://localhost:8080/
+  }
+}
 
-root * /srv
+# this is the server that always responds "ok"
+# which is needed for on_demand_tls to work
+:8080 {
+  respond "ok"
+}
 
-# Do not rewrite up to this point!
+https:// {
+  tls {
+    on_demand
+  }
+  reverse_proxy ${APP_URL}
+}
 
-file_server
-templates
+https://0.0.0.0:3443 {
+  tls {
+    on_demand
+  }
+  reverse_proxy ${APP_URL}
+}
+
+http:// {
+  reverse_proxy ${APP_URL}
+}
