@@ -1,0 +1,44 @@
+#cloud-config
+
+write_files:
+  - path: /etc/caddy/Caddyfile
+    permissions: "0644"
+    owner: root
+    content: |
+      # on_demand_tls asks the server to provide a certificate for a domain
+      # hence it's important to provide this directive in the server block
+      {
+        on_demand_tls {
+          # this asks itself which always respond "ok"
+          ask http://localhost:8080/
+        }
+      }
+
+      # this is the server that always responds "ok"
+      # which is needed for on_demand_tls to work
+      :8080 {
+        respond "ok"
+      }
+
+      https:// {
+        tls {
+          on_demand
+        }
+        reverse_proxy https://namefi.ai
+      }
+
+      https://0.0.0.0:3443 {
+        tls {
+          on_demand
+        }
+        reverse_proxy https://namefi.ai
+      }
+
+      http:// {
+        reverse_proxy https://namefi.ai
+      }
+
+runcmd:
+  - mkdir -p /var/caddy/data
+  - docker pull caddy:2-alpine
+  - docker run -d --name namefi-caddy --restart=always -e APP_URL=https://namefi.ai -v /etc/caddy/Caddyfile:/etc/caddy/Caddyfile:ro -v /var/caddy/data:/data -p 80:80 -p 443:443 -p 8080:8080 -p 3443:3443 caddy:2-alpine 
